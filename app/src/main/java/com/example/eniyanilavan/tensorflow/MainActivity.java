@@ -34,7 +34,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     }
     JavaCameraView jj;
     Mat mRgba;
-    TextView t;
+    static TextView t;
 
     BaseLoaderCallback bmLoader=new BaseLoaderCallback(this) {
         @Override
@@ -139,11 +139,13 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         tensorFlowInferenceInterface.fetch(OUTPUT_NAME, res);
         if (res[0]>res[1])
         {
-            Log.d("predicted","cat");
+//            Log.d("predicted","cat");
+            t.setText("cat");
         }
         else
         {
-            Log.d("predicted","dog");
+//            Log.d("predicted","dog");
+            t.setText("dog");
         }
         return mRgba;
     }
