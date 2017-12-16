@@ -2,13 +2,16 @@ package com.example.eniyanilavan.tensorflow;
 
 import android.annotation.SuppressLint;
 import android.os.Looper;
+import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.SurfaceView;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,7 +37,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     }
     JavaCameraView jj;
     Mat mRgba;
-    static TextView t;
+    TextView t;
 
     BaseLoaderCallback bmLoader=new BaseLoaderCallback(this) {
         @Override
@@ -61,11 +64,11 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        t = (TextView)findViewById(R.id.textView);
         tensorFlowInferenceInterface = new TensorFlowInferenceInterface(getAssets(),MODEL_NAME);
         jj=(JavaCameraView)findViewById(R.id.javaCamera);
         jj.setVisibility(SurfaceView.VISIBLE);
         jj.setCvCameraViewListener(this);
-        t = (TextView)findViewById(R.id.textView);
     }
 
     @Override
@@ -117,10 +120,11 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         return null;
     }
 
-    @SuppressLint("SetTextI18n")
+    @SuppressLint({"SetTextI18n", "WrongConstant"})
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         mRgba = inputFrame.gray();
+        Mat m = inputFrame.rgba();
         Mat a1 = new Mat(32,32,1);
         resize(mRgba,a1,a1.size(),0,0,INTER_CUBIC);
         float a[] = new float[a1.rows()*a1.cols()];
@@ -132,21 +136,26 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
                 k++;
             }
         }
-        float[] res = {0,0};
+        final float[] res = {0,0};
         tensorFlowInferenceInterface = new TensorFlowInferenceInterface(getAssets(),MODEL_NAME);
         tensorFlowInferenceInterface.feed(INPUT_NAME,a,1,32,32,1);
         tensorFlowInferenceInterface.run(new String[] {OUTPUT_NAME});
         tensorFlowInferenceInterface.fetch(OUTPUT_NAME, res);
-        if (res[0]>res[1])
-        {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (res[0]>res[1])
+                {
 //            Log.d("predicted","cat");
-            t.setText("cat");
-        }
-        else
-        {
+                    t.setText("cat");
+                }
+                else
+                {
 //            Log.d("predicted","dog");
-            t.setText("dog");
-        }
-        return mRgba;
+                    t.setText("dog");
+                }
+            }
+        });
+        return m;
     }
 }
